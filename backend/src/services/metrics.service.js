@@ -12,10 +12,10 @@ export const fetchMetrics = async () => {
             usage: cpuLoad.currentLoad,
         },
         memory: {
-            used: memory.used / (1024 ** 3),
-            free: memory.available / (1024 ** 3),
+            used: (memory.total - memory.available) / (1024 ** 3),
+            available: memory.available / (1024 ** 3),
             total: memory.total / (1024 ** 3),
-            usage: (memory.used / memory.total) * 100,
+            usage: ((memory.total - memory.available) / memory.total) * 100,
         },
         disk: disks.map((disk) => ({
             filesystem: disk.fs,

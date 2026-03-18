@@ -1,0 +1,27 @@
+.metric__card {
+    background: var(--code--bg);
+    border: 1px solid ar(--border);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: left;
+    box-shadow: var(--shadow);
+}
+
+.metric__card__title {
+    font-size: 1rem;
+    margin: 0 0 12px;
+    color: var(--text);
+}
+
+.metric__card__value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-h);
+    margin: 0;
+}
+
+.metric__card_subtext {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    color: var (--text);
+}
