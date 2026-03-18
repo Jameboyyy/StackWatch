@@ -15,6 +15,7 @@ app.get('/', (req, res) => {
 
 app.use('/metrics', metricsRoute);
 
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

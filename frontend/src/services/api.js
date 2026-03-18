@@ -1,8 +1,8 @@
-export const getBackendService = async () => {
-    const response = await fetch('http://localhost:3000');
-
+export const getMetrics = async () => {
+    const response = await fetch('http://localhost:3000/metrics');
     if(!response.ok) {
-        throw new Error('Failed to reach backend status');
+        throw new Error('Failed to fetch metrics');
     }
-    return response.text();
-}
+
+    return response.json();
+};
