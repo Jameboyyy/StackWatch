@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import './dashboard.css';
+import React, { useEffect, useState } from 'react';
 import { getMetrics } from '../services/api';
 import MetricCard from '../components/metricCard';
 import MetricChart from '../components/metricChart';
@@ -73,24 +72,24 @@ const Dashboard = () => {
               status={getMetricStatus(metrics.memory.usage)}
             />
 
-            <MetricCard
-              title="Disk Usage"
-              value={
-                metrics.disk[0]
-                  ? `${metrics.disk[0].usage.toFixed(2)}%`
-                  : 'N/A'
-              }
-              subtext={
-                metrics.disk[0]
-                  ? `${metrics.disk[0].used.toFixed(2)} GB / ${metrics.disk[0].total.toFixed(2)} GB`
-                  : 'No disk data'
-              }
-              status={
-                metrics.disk[0]
-                  ? getMetricStatus(metrics.disk[0].usage)
-                  : 'healthy'
-              }
-            />
+            {metrics.disks && metrics.disks.length > 0 ? (
+              metrics.disks.map((disk) => (
+                <MetricCard
+                  key={disk.mount || disk.filesystem}
+                  title={`Disk Usage (${disk.mount || disk.filesystem})`}
+                  value={`${disk.usage.toFixed(2)}%`}
+                  subtext={`${disk.used.toFixed(2)} GB used • ${disk.free.toFixed(2)} GB free • ${disk.total.toFixed(2)} GB total`}
+                  status={getMetricStatus(disk.usage)}
+                />
+              ))
+            ) : (
+              <MetricCard
+                title="Disk Usage"
+                value="N/A"
+                subtext="No disk data"
+                status="healthy"
+              />
+            )}
           </div>
 
           <div className="charts__grid">
