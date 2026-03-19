@@ -7,21 +7,78 @@
     box-shadow: var(--shadow);
 }
 
-.metric__card__title {
+.metric__card:hover {
+    transform: translateY(-2px);
+}
+
+.metric__card--title {
     font-size: 1rem;
     margin: 0 0 12px;
     color: var(--text);
 }
 
-.metric__card__value {
+.metric__card--value {
     font-size: 2rem;
     font-weight: 600;
     color: var(--text-h);
     margin: 0;
+    transition:
+        color 0.3s ease,
+        opacity 0.3s ease,
+        transform 0.3s ease;
 }
 
-.metric__card_subtext {
+.metric__card--subtext {
     margin-top: 10px;
     font-size: 0.95rem;
     color: var (--text);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.metric__card--content--animated {
+    animation: metricFadeIn 0.35s ease;
+}
+
+.metric__card--healthy {
+    border-color: rgba(34, 197, 94, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.08),
+    var(--shadow);
+}
+
+.metric__card--warning {
+    border-color: rgba(245, 158, 11, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(245, 158, 11, 0.1),
+    var(--shadow);
+}
+
+.metric__card--critical {
+    border-color: rgba(239, 68, 68, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.1),
+    var(--shadow);
+}
+
+.metric__card--healthy .metric__card--value {
+    color: #22c55e;
+  }
+  
+  .metric__card--warning .metric__card--value {
+    color: #f59e0b;
+  }
+  
+  .metric__card--critical .metric__card--value {
+    color: #ef4444;
+  }
+
+@keyframes metricFadeIn {
+    from {
+        opacity: 0.55s;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
