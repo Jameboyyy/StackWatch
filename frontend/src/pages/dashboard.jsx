@@ -1,12 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getMetrics } from '../services/api';
 import MetricCard from '../components/metricCard';
 import MetricChart from '../components/metricChart';
 
 const Dashboard = () => {
   const [metrics, setMetrics] = useState(null);
+  const [metricStatuses, setMetricStatuses] = useState({
+    cpu: 'normal',
+    memory: 'normal',
+  });
   const [lastUpdated, setLastUpdated] = useState(null);
   const [history, setHistory] = useState([]);
+  const [alertLog, setAlertLog] = useState([]);
+
+  const lastAlertValuesRef = useRef({
+    cpu: null,
+    memory: null,
+  });
+
+  const alertDelta = 5;
+
+  const getMetricStatus = (value) => {
+    if (value >= 85) return 'critical';
+    if (value >= 60) return 'warning';
+    return 'normal';
+  };
+
+  const statusPriority = {
+    normal: 0,
+    warning: 1,
+    critical: 2,
+  };
 
   useEffect(() => {
     const fetchMetricsData = async () => {
@@ -22,6 +46,65 @@ const Dashboard = () => {
         };
 
         setHistory((prev) => [...prev, point].slice(-12));
+
+        setMetricStatuses((prevStatuses) => {
+          const newStatuses = {
+            cpu: getMetricStatus(data.cpu.usage),
+            memory: getMetricStatus(data.memory.usage),
+          };
+
+          const alerts = [];
+
+          Object.keys(newStatuses).forEach((metric) => {
+            const prevStatus = prevStatuses[metric];
+            const nextStatus = newStatuses[metric];
+            const value = Number(data[metric].usage.toFixed(2));
+            const lastAlertValue = lastAlertValuesRef.current[metric];
+
+            const gotWorse =
+              statusPriority[nextStatus] > statusPriority[prevStatus];
+
+            const sameSeverity =
+              statusPriority[nextStatus] === statusPriority[prevStatus] &&
+              nextStatus !== 'normal';
+
+            const increasedEnough =
+              lastAlertValue === null || value >= lastAlertValue + alertDelta;
+
+            if (gotWorse || (sameSeverity && increasedEnough)) {
+              alerts.push({
+                id: `${metric}-${Date.now()}-${Math.random()}`,
+                metric,
+                value,
+                status: nextStatus,
+                message: `${metric.toUpperCase()} entered ${nextStatus} state at ${value}%`,
+                time: new Date().toLocaleTimeString(),
+              });
+
+              lastAlertValuesRef.current[metric] = value;
+            }
+
+            if (nextStatus === 'normal') {
+              lastAlertValuesRef.current[metric] = null;
+            }
+          });
+
+          if (alerts.length > 0) {
+            setAlertLog((prevLog) => {
+              const filteredAlerts = alerts.filter((alert) => {
+                return !prevLog.some(
+                  (existingAlert) =>
+                    existingAlert.metric === alert.metric &&
+                    existingAlert.status === alert.status &&
+                    existingAlert.value === alert.value
+                );
+              });
+              return [...filteredAlerts, ...prevLog].slice(0,20);
+            });
+          }
+
+          return newStatuses;
+        });
       } catch (error) {
         console.error(error);
       }
@@ -35,12 +118,6 @@ const Dashboard = () => {
 
     return () => clearInterval(interval);
   }, []);
-
-  const getMetricStatus = (value) => {
-    if (value >= 85) return 'critical';
-    if (value >= 60) return 'warning';
-    return 'healthy';
-  };
 
   return (
     <div className="dashboard">
@@ -87,7 +164,7 @@ const Dashboard = () => {
                 title="Disk Usage"
                 value="N/A"
                 subtext="No disk data"
-                status="healthy"
+                status="normal"
               />
             )}
           </div>
@@ -107,8 +184,28 @@ const Dashboard = () => {
               color="#3b82f6"
             />
           </div>
+
+          <div className="alert__log">
+            <h2 className="alert__log--title">Alert Log</h2>
+
+            {alertLog.length === 0 ? (
+              <p>No alerts yet.</p>
+            ) : (
+              <ul>
+                {alertLog.map((alert) => (
+                  <li key={alert.id} className={`alert__item ${alert.status}`}>
+                    <strong>{alert.metric.toUpperCase()}</strong> - {alert.message}
+                    <div>{alert.time}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </>
       )}
+      <footer className="dashboard__footer">
+        <p>StackWatch &copy; 2026</p>
+      </footer>
     </div>
   );
 };
