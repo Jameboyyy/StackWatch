@@ -12,6 +12,7 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - HOST=0.0.0.0
     depends_on:
       - backend
 
@@ -20,9 +21,10 @@ services:
       context: ./backend
     container_name: stackwatch-backend
     ports:
-      - "5001:5001"
+      - "3000:3000"
     volumes:
       - ./backend:/app
       - /app/node_modules
     environment:
       - PORT=5001
+    command: npm run dev
