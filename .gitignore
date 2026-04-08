@@ -1,1 +1,5 @@
 stackwatch-key.pem
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
