@@ -87,7 +87,7 @@ resource "aws_instance" "stackwatch_ec2" {
                 apt update -y
 
                 # Install Docker
-                apt install -y docker.io git docker-compose-v2
+                apt install -y docker.io git docker-compose-v2 curl
 
                 # Start and enable Docker
                 systemctl start docker
@@ -104,11 +104,17 @@ resource "aws_instance" "stackwatch_ec2" {
                     git clone https://github.com/Jameboyyy/StackWatch.git
                 fi
 
+                TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+                    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+                PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+                    http://169.254.169.254/latest/meta-data/public-ipv4)
+
                 cd /home/ubuntu/StackWatch/frontend
 
                 # Create frontend env file with the current instance public IP
                 cat > .env <<ENVEOF
-                VITE_API_BASE_URL=http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000
+                VITE_API_BASE_URL=http://$PUBLIC_IP:3000
                 ENVEOF
 
                 # Start the app
