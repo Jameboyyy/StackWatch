@@ -92,16 +92,6 @@ resource "aws_instance" "stackwatch_ec2" {
                 mkdir -p /home/ubuntu/StackWatch
                 cd /home/ubuntu/StackWatch
 
-                TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
-                    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-
-                PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
-                    http://169.254.169.254/latest/meta-data/public-ipv4)
-
-                cat > .env <<ENVEOF
-                VITE_API_BASE_URL=http://$PUBLIC_IP:3000
-                ENVEOF
-
                 cat > docker-compose.yml <<COMPOSEEOF
                 services:
                     backend:
@@ -118,8 +108,6 @@ resource "aws_instance" "stackwatch_ec2" {
                         container_name: stackwatch-frontend
                         ports:
                             - "5173:5173"
-                        environment:
-                            - VITE_API_BASE_URL=\$${VITE_API_BASE_URL}
                         depends_on:
                             - backend
                         restart: unless-stopped
