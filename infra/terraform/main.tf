@@ -75,6 +75,15 @@ resource "aws_instance" "stackwatch_ec2" {
     vpc_security_group_ids      = [aws_security_group.stackwatch_sg.id]
     associate_public_ip_address = true
 
+    user_data = <<-EOF
+                #!/bin/bash
+                apt update -y
+                apt install -y docker.io
+                systemctl start docker
+                systemctl enable docker
+                usermod -aG docker ubuntu
+                EOF
+
     tags = {
         Name    = "${var.project_name}-ec2"
         Project = var.project_name
