@@ -1,22 +1,39 @@
 version: "3.9"
 
+mkdir -p /home/ubuntu/StackWatch
+cd /home/ubuntu/StackWatch
+
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/public-ipv4)
+
+# Create env file
+cat > .env <<ENVEOF
+VITE_API_BASE_URL=http://$PUBLIC_IP:3000
+ENVEOF
+
+# Create docker-compose file (image-based now)
+cat > docker-compose.yml <<COMPOSEEOF
 services:
+  backend:
+    image: ghcr.io/jameboyyy/stackwatch-backend:latest
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
   frontend:
     image: ghcr.io/jameboyyy/stackwatch-frontend:latest
-    container_name: stackwatch-frontend
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+      - VITE_API_BASE_URL=\${VITE_API_BASE_URL}
     depends_on:
       - backend
     restart: unless-stopped
+COMPOSEEOF
 
-  backend:
-    image: ghcr.io/jameboyyy/stackwatch-backend:latest
-    container_name: stackwatch-backend
-    ports:
-      - "3000:3000"
-    environment:
-      - PORT=3000
-    restart: unless-stopped
+# Pull + run (THIS is the key change)
+docker compose pull
+docker compose up -d

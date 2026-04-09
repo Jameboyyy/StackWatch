@@ -79,30 +79,18 @@ resource "aws_instance" "stackwatch_ec2" {
                 #!/bin/bash
                 set -eux
 
-                # Log user_data output for debugging
+                exec > /var/log/user-data.log 2>&1
 
-                exec  > /var/log/user-data.log 2>&1
-
-                # Update packages
                 apt update -y
+                apt install -y docker.io docker-compose-v2 curl
 
-                # Install Docker
-                apt install -y docker.io git docker-compose-v2 curl
-
-                # Start and enable Docker
                 systemctl start docker
                 systemctl enable docker
 
-                # Let ubuntu use Docker without sudo
                 usermod -aG docker ubuntu
 
-                # Move into ubuntu home
-                cd /home/ubuntu
-
-                # Clone the repo only if it does not already exist
-                if [ ! -d "StackWatch" ]; then
-                    git clone https://github.com/Jameboyyy/StackWatch.git
-                fi
+                mkdir -p /home/ubuntu/StackWatch
+                cd /home/ubuntu/StackWatch
 
                 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
                     -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
@@ -110,17 +98,35 @@ resource "aws_instance" "stackwatch_ec2" {
                 PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
                     http://169.254.169.254/latest/meta-data/public-ipv4)
 
-                cd /home/ubuntu/StackWatch/frontend
-
-                # Create frontend env file with the current instance public IP
                 cat > .env <<ENVEOF
                 VITE_API_BASE_URL=http://$PUBLIC_IP:3000
                 ENVEOF
 
-                # Start the app
-                cd /home/ubuntu/StackWatch
-                docker compose up -d --build
+                cat > docker-compose.yml <<COMPOSEEOF
+                services:
+                    backend:
+                        image: ghcr.io/jameboyyy/stackwatch-backend:latest
+                        container_name: stackwatch-backend
+                        ports:
+                            - "3000:3000"
+                        environment:
+                            - PORT=3000
+                        restart: unless-stopped
 
+                    frontend:
+                        image: ghcr.io/jameboyyy/stackwatch-frontend:latest
+                        container_name: stackwatch-frontend
+                        ports:
+                            - "5173:5173"
+                        environment:
+                            - VITE_API_BASE_URL=\$${VITE_API_BASE_URL}
+                        depends_on:
+                            - backend
+                        restart: unless-stopped
+                COMPOSEEOF
+
+                docker compose pull
+                docker compose up -d
                 EOF
 
     tags = {
