@@ -77,11 +77,44 @@ resource "aws_instance" "stackwatch_ec2" {
 
     user_data = <<-EOF
                 #!/bin/bash
+                set -eux
+
+                # Log user_data output for debugging
+
+                exec  > /var/log/user-data.log 2>&1
+
+                # Update packages
                 apt update -y
-                apt install -y docker.io
+
+                # Install Docker
+                apt install -y docker.io git docker-compose-v2
+
+                # Start and enable Docker
                 systemctl start docker
                 systemctl enable docker
+
+                # Let ubuntu use Docker without sudo
                 usermod -aG docker ubuntu
+
+                # Move into ubuntu home
+                cd /home/ubuntu
+
+                # Clone the repo only if it does not already exist
+                if [ ! -d "StackWatch" ]; then
+                    git clone https://github.com/Jameboyyy/StackWatch.git
+                fi
+
+                cd /home/ubuntu/StackWatch/frontend
+
+                # Create frontend env file with the current instance public IP
+                cat > .env <<ENVEOF
+                VITE_API_BASE_URL=http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000
+                ENVEOF
+
+                # Start the app
+                cd /home/ubuntu/StackWatch
+                docker compose up -d --build
+
                 EOF
 
     tags = {
