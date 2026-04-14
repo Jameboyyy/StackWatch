@@ -39,8 +39,8 @@ resource "aws_security_group" "stackwatch_sg" {
 
     ingress {
         description = "Frontend dev port"
-        from_port   = 5173
-        to_port     = 5173
+        from_port   = 80
+        to_port     = 80
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
@@ -65,6 +65,15 @@ resource "aws_security_group" "stackwatch_sg" {
         Name    = "${var.project_name}-sg"
         Project = var.project_name
     }
+}
+
+data "aws_eip" "existing_eip" {
+    public_ip = "184.169.244.68"
+}
+
+resource "aws_eip_association" "eip_assoc" {
+    instance_id     = aws_instance.stackwatch_ec2.id
+    allocation_id   = data.aws_eip.existing_eip.id
 }
 
 resource "aws_instance" "stackwatch_ec2" {
@@ -107,7 +116,7 @@ resource "aws_instance" "stackwatch_ec2" {
                         image: ghcr.io/jameboyyy/stackwatch-frontend:latest
                         container_name: stackwatch-frontend
                         ports:
-                            - "5173:5173"
+                            - "80:80"
                         depends_on:
                             - backend
                         restart: unless-stopped

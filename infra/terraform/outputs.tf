@@ -13,3 +13,7 @@ output "instance_id" {
     value       = aws_instance.stackwatch_ec2.id
 }
 
+output "aws_eip" {
+    description = "Elastic IP Address"
+    value       = data.aws_eip.existing_eip.public_ip
+}

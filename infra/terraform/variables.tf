@@ -22,7 +22,7 @@ variable "key_name" {
 }
 
 variable "allowed_ssh_cidr" {
-    description = "CIDR block allowed to SSH  into the instance"
+    description = "CIDR block allowed to SSH into the instance"
     type        = string
     default     = "0.0.0.0/0"
 }
