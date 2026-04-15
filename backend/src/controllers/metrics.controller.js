@@ -1,4 +1,4 @@
-import { fetchMetrics } from '../services/metrics.service.js';;
+import { fetchMetrics } from '../services/metrics.service.js';
 
 export const getMetrics = async (req, res) => {
     try {

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import metricsRoute from './routes/metrics.route.js';
-
+import prometheusRoute from './routes/prometheus.route.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +13,8 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
-app.use('/metrics', metricsRoute);
+app.use('/api/metrics', metricsRoute);
+app.use('/metrics', prometheusRoute);
 
 
 app.listen(PORT, () => {
