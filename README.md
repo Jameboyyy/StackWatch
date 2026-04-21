@@ -4,6 +4,8 @@ Live Demo: http://184.169.244.68
 
 StackWatch is a full stack monitoring platform built to demonstrate how modern applications are developed, deployed, monitored, and operated. It combines a custom frontend dashboard with a backend metrics API, containerized services, infrastructure automation, and industry standard observability tooling.
 
+The project originally began as a custom real time dashboard for displaying system metrics through a React frontend. As development progressed, it evolved into a broader observability platform after I integrated Prometheus and Grafana to separate user facing monitoring from operational monitoring.
+
 The goal of the project was not only to display system metrics, but to understand the full lifecycle of a production style system: application development, deployment, networking, monitoring, persistance, and cloud infrastructure.
 
 ---
