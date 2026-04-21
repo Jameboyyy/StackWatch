@@ -39,9 +39,21 @@ The React frontend provides a user friendly monitoring interface that displays:
 * Threshold based alerts
 * System health states
 
+```js
+const interval = setInterval(() => {
+   fetchMetricsData();
+}, 5000);
+```
+
 ## Metrics Pipeline
 
 The backend also exposes Prometheus compatible metrics so external monitoring tools cna scrape and analyze the system.
+
+```js
+app.use('/api/metrics', metricsRoute);
+app.use('/metrics', prometheusRoute);
+```
+
 
 ## Observability Layer
 
@@ -65,6 +77,15 @@ Node.js and Express made it simple to expose API endpoints, process metrics data
 
 I used Docker to package services consistently across environments. Docker Compose allowed me to run the frontend, backend, Prometheus, and Grafana together as one stack.
 
+```yaml
+services:
+   frontend:
+   backend:
+   prometheus:
+   grafana:
+volumes:
+```
+
 ### Prometheus + Grafana
 
 These are widely used industry tools for monitoring systems.
@@ -86,6 +107,12 @@ Terraform provisions:
 
 AWS EC2 was used to host the full stack in a real cloud environment.
 
+```t
+resource "aws_instance" "stackwatch_ec2" {
+   instance_type = "t3.micro"
+}
+```
+
 ## System Architecture
 
 Browser User
@@ -106,13 +133,17 @@ Grafana (Port 3001)
 
 ### Application Metrics
 
-   /api/metrics
+   ```text
+   GET /api/metrics
+   ```
 
 Returns JSON data used by the custom frontend dashboard.
 
 ### Prometheus Metrics
 
-   /metrics
+   ```text
+   GET /metrics
+   ```
 
 Returns Prometheus formatted metrics for scraping.
 
@@ -123,6 +154,30 @@ This separation allows one backend to serve both user facing monitoring and mach
 ### Alert Logic
 
 I implemented threshold based alerting with state transitions to reduce repeated notifications when metrics hover near warning thresholds.
+
+```js
+  const getMetricStatus = (value) => {
+    if (value >= 85) return 'critical';
+    if (value >= 60) return 'warning';
+    return 'normal';
+  };
+```
+
+```js
+if (alerts.length > 0) {
+setAlertLog((prevLog) => {
+   const filteredAlerts = alerts.filter((alert) => {
+      return !prevLog.some(
+      (existingAlert) =>
+         existingAlert.metric === alert.metric &&
+         existingAlert.status === alert.status &&
+         existingAlert.value === alert.value
+      );
+   });
+   return [...filteredAlerts, ...prevLog].slice(0,20);
+});
+}
+```
 
 ### Persistent Volumes
 
@@ -138,8 +193,9 @@ Instead of manually configuring servers each time, Terraform recreates the envir
 
 ## Running Locally
 
+```bash
 docker compose up -d
-
+```
 Services:
 * Frontend http://localhost
 * Backend: http://localhost:3000/api/metrics
