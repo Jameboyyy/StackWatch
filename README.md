@@ -1,155 +1,187 @@
 # StackWatch
 
-StackWatch is a real-time system monitoring dashboard that visualizes CPU, memory, and disk usage with intelligent alerting. It is built as a full-stack application and deployed on AWS EC2 using Docker.
+Live Demo: http://184.169.244.68
+
+StackWatch is a full stack monitoring platform built to demonstrate how modern applications are developed, deployed, monitored, and operated. It combines a custom frontend dashboard with a backend metrics API, containerized services, infrastructure automation, and industry standard observability tooling.
+
+The goal of the project was not only to display system metrics, but to understand the full lifecycle of a production style system: application development, deployment, networking, monitoring, persistance, and cloud infrastructure.
 
 ---
 
-## 🚀 Overview
+## Purpose
 
-StackWatch provides a lightweight observability solution for monitoring system performance. It collects live metrics from the host machine and displays them in a responsive dashboard with charts and alert tracking.
+Many dashboards only focus on frontend visuals. StackWatch was built to understand behind the visuals.
 
-The application supports running locally, inside Docker containers, and on cloud infrastructure, making it flexible across different environments.
+I wanted to understand questions such as:
 
----
+* How does a frontend communicate with backend services?
+* How are applications containerized and deployed consistently?
+* How are metrics exposed and collected in real environments?
+* How do monitoring tools like Prometheus and Grafana fit into a system?
+* How can infrastructure be recreated through code instead of manual setup?
 
-## ✨ Features
+StackWatch became a project focused on both software engineering and operations thinking.
 
-* Real-time system monitoring (CPU, memory, disk)
-* Live updating charts
-* Intelligent alert system
+## What It Does
 
-  * State-based alerts (normal → warning → critical)
-  * Delta-based suppression to prevent alert spam
-* Alert log with severity indicators
-* Multi-environment support (local, Docker, AWS EC2)
+StackWatch collects system metrics in real time and displays them through multiple layers
 
----
+## Custom Application Dashboard
 
-## 🛠 Tech Stack
+The React frontend provides a user friendly monitoring interface that displays:
 
-**Frontend**
+* CPU usage
+* Memory usage
+* Disk usage
+* Real time chart updates
+* Threshold based alerts
+* System health states
 
-* React (Vite)
-* JavaScript
-* CSS
+## Metrics Pipeline
 
-**Backend**
+The backend also exposes Prometheus compatible metrics so external monitoring tools cna scrape and analyze the system.
 
-* Node.js
-* Express
+## Observability Layer
 
-**DevOps / Deployment**
+Prometheus stores time series metrics, while Grafana visualizes that data through dashboards.
 
-* Docker & Docker Compose
-* AWS EC2
+This means StackWatch supports both:
+* custom application monitoring
+* professional observability workflows
 
----
+## Why I Chose This Stack
 
-## 🧠 How It Works
+### Frontend: React + Vite
 
-```
-Frontend (React) → Backend API (Express) → System Metrics (Host Machine)
-```
+I chose React because it allows reusable UI components and real time state updates. Vite provides a fast local development experience.
 
-The backend collects system metrics and exposes them through an API. The frontend polls this API at regular intervals and updates the UI in real time.
+### Backend: Node.js + Express
 
----
+Node.js and Express made it simple to expose API endpoints, process metrics data, and integrate monitoring libraries.
 
-## ⚙️ Environment Configuration
+### Docker + Docker Compose
 
-The frontend uses environment variables to determine the backend API:
+I used Docker to package services consistently across environments. Docker Compose allowed me to run the frontend, backend, Prometheus, and Grafana together as one stack.
 
-```
-VITE_API_BASE_URL=http://localhost:3000
-```
+### Prometheus + Grafana
 
-This allows seamless switching between local and deployed environments.
+These are widely used industry tools for monitoring systems.
 
----
+* Prometheus handles scraping and storing metrics
+* Grafana handles dashboards and visualization
 
-## 🧪 Running Locally
+I chose them to learn how real operations teams monitor infrastructure.
 
-### 1. Backend
+### Terraform + AWS EC2
 
-```
-cd backend
-npm install
-npm run dev
-```
+I wanted to understand infrastructure as code and cloud deployment.
 
-### 2. Frontend
+Terraform provisions:
+* EC2 compute instance
+* security groups
+* Elastic IP
+* automated bootstrap scripts
 
-```
-cd frontend
-npm install
-npm run dev
-```
+AWS EC2 was used to host the full stack in a real cloud environment.
 
-Open:
+## System Architecture
 
-```
-http://localhost:5173
-```
+Browser User
+    ↓
+React Frontend (Port 80)
+    ↓
+Node.js / Express Backend (Port 3000)
+    ↓
+System Metrics Collection
 
----
+Prometheus (Port 9090)
+    ↓ scrapes /metrics
 
-## 🐳 Running with Docker
+Grafana (Port 3001)
+    ↓ queries Prometheus
 
-From the root directory:
+## API Design
 
-```
-docker-compose up --build
-```
+### Application Metrics
 
-Then open:
+   /api/metrics
 
-```
-http://localhost:5173
-```
+Returns JSON data used by the custom frontend dashboard.
 
----
+### Prometheus Metrics
 
-## ☁️ Deployment (AWS EC2)
+   /metrics
 
-The application was deployed on an AWS EC2 instance using Docker.
+Returns Prometheus formatted metrics for scraping.
 
-Steps:
+This separation allows one backend to serve both user facing monitoring and machine readable observability data.
 
-1. Launch EC2 instance (Ubuntu, t2.micro)
-2. Install Docker and Docker Compose
-3. Clone repository
-4. Configure environment variables
-5. Run:
+## Engineering Decisions
 
-   ```
-   docker-compose up -d --build
-   ```
-6. Access via:
+### Alert Logic
 
-   ```
-   http://<ec2-public-ip>:5173
-   ```
+I implemented threshold based alerting with state transitions to reduce repeated notifications when metrics hover near warning thresholds.
 
----
+### Persistent Volumes
 
-## ⚠️ Notes
+Grafana and Prometheus use Docker named volumes so dashboards, credentials, and metric history survive container restarts.
 
-* When the backend runs inside Docker, it monitors container-level metrics.
-* When running locally or on EC2, it monitors the host machine.
-* Public EC2 IP may change when the instance is restarted.
+### Container Networking
 
----
+Services communicate internally through Docker Compose networking using service names rather than hardcoded IP addresses.
 
-## 📸 Demo
+### Infrastructure as Code
 
-### Dashboard
-![Dashboard](./screenshots/dashboard.png)
+Instead of manually configuring servers each time, Terraform recreates the environment consistently.
 
-### Chart
-![Chart](./screenshots/chart.png)
+## Running Locally
 
-### Alerts
-![Alerts](./screenshots/alertlog.png)
+docker compose up -d
+
+Services:
+* Frontend http://localhost
+* Backend: http://localhost:3000/api/metrics
+* Prometheus http://localhost:9090
+* Grafana: http://localhost:3001
+
+## Cloud Deployment
+
+Live Demo: 
+   http://184.169.244.68
+
+Infrastructure is provisioned and repeatable through Terraform
+
+## What This Project Demonstrates
+* Full stack development
+* Backend API design
+* Real time frontend state management
+* Docker containerization
+* Multi service orchestration
+* Monitoring and observability
+* Infrastructure as code
+* Cloud deployment
+* Debugging networking and deployment issues
+* Understanding systems at a higher architectural level
+
+## Screenshots
+
+### StackWatch Dashboard
+
+![dashboard](./screenshots/dashboard.png)
+![chart](./screenshots/chart.png)
+![alert](./screenshots/alertlog.png)
+
+### Grafana Dashboard
+
+![grafanaDashboard](./screenshots/grafanaDashboard.png)
 
 
----
+### Prometheus Targets
+
+![prometheusTargets](./screenshots/prometheusTargets.png)
+
+
+## Future Improvements (StackWatch V2)
+* GitHub Actions CI/CD pipeline
+* Kubernetes deployment
+* Alertmanager integration
