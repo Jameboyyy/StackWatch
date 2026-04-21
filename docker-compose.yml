@@ -1,17 +1,13 @@
-
-mkdir -p /home/ubuntu/StackWatch
-cd /home/ubuntu/StackWatch
-
-# Create docker-compose file (image-based now)
-cat > docker-compose.yml <<'COMPOSEEOF'
 services:
   backend:
+    platform: linux/amd64
     image: ghcr.io/jameboyyy/stackwatch-backend:latest
     ports:
       - "3000:3000"
     restart: unless-stopped
 
   frontend:
+    platform: linux/amd64
     image: ghcr.io/jameboyyy/stackwatch-frontend:latest
     container_name: stackwatch-frontend
     ports:
@@ -19,8 +15,14 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-COMPOSEEOF
 
-
-docker compose pull
-docker compose up -d
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: stackwatch-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - backend
+    restart: unless-stopped

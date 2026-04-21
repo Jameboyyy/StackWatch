@@ -38,7 +38,7 @@ resource "aws_security_group" "stackwatch_sg" {
     }
 
     ingress {
-        description = "Frontend dev port"
+        description = "HTTP"
         from_port   = 80
         to_port     = 80
         protocol    = "tcp"
@@ -49,6 +49,14 @@ resource "aws_security_group" "stackwatch_sg" {
         description = "Backend API port"
         from_port   = 3000
         to_port     = 3000
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
+        description = "Prometheus"
+        from_port = 9090
+        to_port   = 9090
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
@@ -101,6 +109,17 @@ resource "aws_instance" "stackwatch_ec2" {
                 mkdir -p /home/ubuntu/StackWatch
                 cd /home/ubuntu/StackWatch
 
+                cat > prometheus.yml <<PROMEOF
+                global:
+                    scrape_interval: 5s
+                
+                scrape_configs:
+                    - job_name: "stackwatch-backend"
+                      static_configs:
+                        - targets: ["backend:3000"]
+
+                PROMEOF
+
                 cat > docker-compose.yml <<COMPOSEEOF
                 services:
                     backend:
@@ -117,6 +136,17 @@ resource "aws_instance" "stackwatch_ec2" {
                         container_name: stackwatch-frontend
                         ports:
                             - "80:80"
+                        depends_on:
+                            - backend
+                        restart: unless-stopped
+
+                    prometheus:
+                        image: prom/prometheus:latest
+                        container_name: stackwatch-prometheus
+                        ports:
+                            - "9090:9090"
+                        volumes:
+                            - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
                         depends_on:
                             - backend
                         restart: unless-stopped
